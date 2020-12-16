@@ -1,0 +1,43 @@
+{
+  "name": "@voom/cube",
+  "description": "S3 wrapper for Hapi",
+  "version": "0.0.0",
+  "license": "MIT",
+  "repository": "git://github.com/voomjs/cube",
+  "main": "lib/index.js",
+  "files": [
+    "lib/**/*"
+  ],
+  "keywords": [
+    "hapi",
+    "plugin",
+    "storage",
+    "amazon",
+    "s3"
+  ],
+  "dependencies": {
+    "@aws-sdk/client-s3": "3.x.x",
+    "@aws-sdk/lib-storage": "3.x.x",
+    "joi": "17.x.x"
+  },
+  "devDependencies": {
+    "@hapi/code": "8.x.x",
+    "@hapi/hapi": "20.x.x",
+    "@hapi/lab": "24.x.x",
+    "dotenv": "8.x.x",
+    "form-data": "3.x.x",
+    "get-stream": "6.x.x",
+    "standard": "16.x.x"
+  },
+  "scripts": {
+    "test": "lab",
+    "test-html": "lab -r html -o coverage.html",
+    "lint": "standard --fix"
+  },
+  "standard": {
+    "env": [
+      "es6",
+      "node"
+    ]
+  }
+}

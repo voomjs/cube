@@ -3,5 +3,6 @@ module.exports = {
   threshold: 100,
   timeout: 4000,
   verbose: true,
+  shuffle: true,
   leaks: false
 }

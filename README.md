@@ -22,10 +22,16 @@ async function start () {
   await server.register({
     plugin: Cube,
     options: {
-      key: 'key',
-      secret: 'secret',
-      bucket: 'bucket',
-      region: 'region'
+      connection: {
+        access: 'access',
+        secret: 'secret',
+        bucket: 'bucket',
+        region: 'region'
+      },
+      location: {
+        base: 'https://{bucket}.s3.amazonaws.com',
+        path: false
+      }
     }
   })
 

@@ -5,7 +5,7 @@ services:
   minio:
     image: minio/minio
     environment:
-      - MINIO_ACCESS_KEY=${CUBE_KEY}
+      - MINIO_ACCESS_KEY=${CUBE_ACCESS}
       - MINIO_SECRET_KEY=${CUBE_SECRET}
     command: server /data
     ports:

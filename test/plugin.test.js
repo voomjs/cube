@@ -6,29 +6,24 @@ const Code = require('@hapi/code')
 const Hapi = require('@hapi/hapi')
 const Stream = require('get-stream')
 const FormData = require('form-data')
-const AWS = require('@aws-sdk/client-s3')
 
 const Plugin = require('../lib')
 
 const { expect } = Code
-const { describe, it, beforeEach, afterEach } = exports.lab = Lab.script()
+const { describe, it } = exports.lab = Lab.script()
 
 const defaults = {
-  key: process.env.CUBE_KEY,
-  secret: process.env.CUBE_SECRET,
-  bucket: process.env.CUBE_BUCKET,
-  region: process.env.CUBE_REGION,
-  endpoint: process.env.CUBE_ENDPOINT
-}
-
-const s3 = new AWS.S3({
-  region: defaults.region,
-  endpoint: defaults.endpoint,
-  credentials: {
-    accessKeyId: defaults.key,
-    secretAccessKey: defaults.secret
+  connection: {
+    access: process.env.CUBE_ACCESS,
+    secret: process.env.CUBE_SECRET,
+    bucket: process.env.CUBE_BUCKET,
+    region: process.env.CUBE_REGION,
+    endpoint: process.env.CUBE_ENDPOINT
+  },
+  location: {
+    path: true
   }
-})
+}
 
 async function withServer (options) {
   const server = Hapi.Server()
@@ -42,24 +37,6 @@ async function withServer (options) {
 }
 
 describe('plugin', function () {
-  beforeEach(async function () {
-    try {
-      await s3.headBucket({ Bucket: defaults.bucket })
-    } catch (e) {
-      await s3.createBucket({ Bucket: defaults.bucket })
-    }
-  })
-
-  afterEach(async function () {
-    const res = await s3.listObjects({ Bucket: defaults.bucket })
-
-    for (const file of (res.Contents || [])) {
-      await s3.deleteObject({ Bucket: defaults.bucket, Key: file.Key })
-    }
-
-    await s3.deleteBucket({ Bucket: defaults.bucket })
-  })
-
   it('throws an error when options are missing', async function () {
     const server = Hapi.Server()
 
@@ -90,6 +67,8 @@ describe('plugin', function () {
   it('handles an hapi file from buffer', async function () {
     const server = await withServer()
 
+    await server.cube().bucket.create()
+
     server.route({
       method: 'POST',
       path: '/plugin',
@@ -100,16 +79,14 @@ describe('plugin', function () {
         }
       },
       async handler (request, h) {
-        const { cube } = request
-        const { file } = request.payload
-
         const name = 'file.txt'
+        const file = request.payload.file
 
-        const res = await cube().put(name, file)
+        const res = await request.cube().put(name, file)
 
         expect(res.raw).to.be.an.object()
 
-        const { exists } = await cube().exists(name)
+        const { exists } = await request.cube().exists(name)
 
         expect(exists).to.be.true()
 
@@ -132,10 +109,14 @@ describe('plugin', function () {
     })
 
     expect(res.statusCode).to.be.equal(204)
+
+    await server.cube().bucket.delete()
   })
 
   it('handles an hapi file from stream', async function () {
     const server = await withServer()
+
+    await server.cube().bucket.create()
 
     server.route({
       method: 'POST',
@@ -147,16 +128,14 @@ describe('plugin', function () {
         }
       },
       async handler (request, h) {
-        const { cube } = request
-        const { file } = request.payload
-
         const name = 'file.txt'
+        const file = request.payload.file
 
-        const res = await cube().put(name, file)
+        const res = await request.cube().put(name, file)
 
         expect(res.raw).to.be.an.object()
 
-        const { exists } = await cube().exists(name)
+        const { exists } = await request.cube().exists(name)
 
         expect(exists).to.be.true()
 
@@ -179,184 +158,223 @@ describe('plugin', function () {
     })
 
     expect(res.statusCode).to.be.equal(204)
+
+    await server.cube().bucket.delete()
   })
 
   it('puts a file from string', async function () {
     const server = await withServer()
 
-    const { cube } = server
+    await server.cube().bucket.create()
 
     const name = 'file.txt'
     const data = 'hello world'
 
-    const res = await cube().put(name, data)
+    const res = await server.cube().put(name, data)
 
     expect(res.raw).to.be.an.object()
 
-    const { exists } = await cube().exists(name)
+    const { exists } = await server.cube().exists(name)
 
     expect(exists).to.be.true()
+
+    await server.cube().bucket.delete()
   })
 
   it('puts a file from buffer', async function () {
     const server = await withServer()
 
-    const { cube } = server
+    await server.cube().bucket.create()
 
     const name = 'file.txt'
     const data = Buffer.from('hello world', 'utf-8')
 
-    const res = await cube().put(name, data)
+    const res = await server.cube().put(name, data)
 
     expect(res.raw).to.be.an.object()
 
-    const { exists } = await cube().exists(name)
+    const { exists } = await server.cube().exists(name)
 
     expect(exists).to.be.true()
+
+    await server.cube().bucket.delete()
   })
 
   it('puts a file from stream', async function () {
     const server = await withServer()
 
-    const { cube } = server
+    await server.cube().bucket.create()
 
     const name = 'file.txt'
     const data = Fs.createReadStream(__filename)
 
-    const res = await cube().put(name, data)
+    const res = await server.cube().put(name, data)
 
     expect(res.raw).to.be.an.object()
 
-    const { exists } = await cube().exists(name)
+    const { exists } = await server.cube().exists(name)
 
     expect(exists).to.be.true()
+
+    await server.cube().bucket.delete()
   })
 
   it('gets a file as stream', async function () {
     const server = await withServer()
 
-    const { cube } = server
+    await server.cube().bucket.create()
 
     const name = 'file.txt'
     const data = 'hello world'
 
-    await cube().put(name, data)
+    await server.cube().put(name, data)
 
-    const res = await cube().get(name)
+    const res = await server.cube().get(name)
 
     expect(res.raw).to.be.an.object()
 
     const buffer = await Stream.buffer(res.stream)
 
     expect(buffer.toString('utf-8')).to.be.equal(data)
+
+    await server.cube().bucket.delete()
   })
 
   it('gets a file that does not exist', async function () {
     const server = await withServer()
 
-    const { cube } = server
+    await server.cube().bucket.create()
 
     try {
-      await cube().get('missing.txt')
+      await server.cube().get('missing.txt')
 
       Code.fail()
     } catch (e) {
       expect(e.message).to.be.equal('NoSuchKey')
     }
+
+    await server.cube().bucket.delete()
   })
 
   it('gets a file metadata', async function () {
     const server = await withServer()
 
-    const { cube } = server
+    await server.cube().bucket.create()
 
     const name = 'file.txt'
     const data = 'hello world'
 
-    await cube().put(name, data)
+    await server.cube().put(name, data)
 
-    const res = await cube().meta(name)
+    const res = await server.cube().meta(name)
 
     expect(res.raw).to.be.an.object()
 
     expect(res.size).to.be.equal(data.length)
+
+    await server.cube().bucket.delete()
   })
 
-  it('gets a file path', async function () {
-    const server = await withServer({ url: 'url', bucket: 'bucket' })
+  it('gets a file path - path style', async function () {
+    const server = await withServer({
+      location: {
+        path: true,
+        base: 'base'
+      }
+    })
 
-    const { cube } = server
+    const { bucket } = defaults.connection
 
-    expect(cube().path('file.txt')).to.be.equal('url/bucket/file.txt')
-    expect(cube().path('avatars/1')).to.be.equal('url/bucket/avatars/1')
+    expect(server.cube().path('file.txt')).to.be.equal(`base/${bucket}/file.txt`)
+    expect(server.cube().path('avatars/1')).to.be.equal(`base/${bucket}/avatars/1`)
+  })
+
+  it('gets a file path - virtual hosted style', async function () {
+    const server = await withServer({
+      location: {
+        path: false,
+        base: '{bucket}.{region}.base'
+      }
+    })
+
+    const { bucket, region } = defaults.connection
+
+    expect(server.cube().path('file.txt')).to.be.equal(`${bucket}.${region}.base/file.txt`)
+    expect(server.cube().path('avatars/1')).to.be.equal(`${bucket}.${region}.base/avatars/1`)
   })
 
   it('moves a file', async function () {
     const server = await withServer()
 
-    const { cube } = server
+    await server.cube().bucket.create()
 
     const orig = 'orig/file.txt'
     const copy = 'copy/file.txt'
 
-    await cube().put(orig, 'hello world')
+    await server.cube().put(orig, 'hello world')
 
-    const { exists: one } = await cube().exists(copy)
+    const { exists: one } = await server.cube().exists(copy)
 
     expect(one).to.be.false()
 
-    await cube().move(orig, copy)
+    await server.cube().move(orig, copy)
 
-    const { exists: two } = await cube().exists(orig)
+    const { exists: two } = await server.cube().exists(orig)
 
     expect(two).to.be.false()
 
-    const { exists: three } = await cube().exists(copy)
+    const { exists: three } = await server.cube().exists(copy)
 
     expect(three).to.be.true()
+
+    await server.cube().bucket.delete()
   })
 
   it('copies a file', async function () {
     const server = await withServer()
 
-    const { cube } = server
+    await server.cube().bucket.create()
 
     const orig = 'orig/file.txt'
     const copy = 'copy/file.txt'
 
-    await cube().put(orig, 'hello world')
+    await server.cube().put(orig, 'hello world')
 
-    const { exists: one } = await cube().exists(copy)
+    const { exists: one } = await server.cube().exists(copy)
 
     expect(one).to.be.false()
 
-    await cube().copy(orig, copy)
+    await server.cube().copy(orig, copy)
 
-    const { exists: two } = await cube().exists(orig)
+    const { exists: two } = await server.cube().exists(orig)
 
     expect(two).to.be.true()
 
-    const { exists: three } = await cube().exists(copy)
+    const { exists: three } = await server.cube().exists(copy)
 
     expect(three).to.be.true()
+
+    await server.cube().bucket.delete()
   })
 
   it('deletes a file', async function () {
     const server = await withServer()
 
-    const { cube } = server
+    await server.cube().bucket.create()
 
     const name = 'file.txt'
     const data = 'hello world'
 
-    await cube().put(name, data)
+    await server.cube().put(name, data)
 
-    const res = await cube().delete(name)
+    const res = await server.cube().delete(name)
 
     expect(res.raw).to.be.an.object()
 
-    const { exists } = await cube().exists(name)
+    const { exists } = await server.cube().exists(name)
 
     expect(exists).to.be.false()
+
+    await server.cube().bucket.delete()
   })
 })

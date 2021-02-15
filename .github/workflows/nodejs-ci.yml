@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      CUBE_KEY: cube-key
+      CUBE_ACCESS: cube-access
       CUBE_SECRET: cube-secret
       CUBE_BUCKET: cube-bucket
       CUBE_REGION: cube-region

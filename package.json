@@ -1,7 +1,7 @@
 {
   "name": "@voom/cube",
   "description": "S3 wrapper for Hapi",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "license": "MIT",
   "repository": "git://github.com/voomjs/cube",
   "main": "lib/index.js",

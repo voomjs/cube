@@ -4,6 +4,7 @@ const Fs = require('fs')
 const Lab = require('@hapi/lab')
 const Code = require('@hapi/code')
 const Hapi = require('@hapi/hapi')
+const Hoek = require('@hapi/hoek')
 const Stream = require('get-stream')
 const FormData = require('form-data')
 
@@ -25,12 +26,12 @@ const defaults = {
   }
 }
 
-async function withServer (options) {
+async function withServer (options = {}) {
   const server = Hapi.Server()
 
   await server.register({
     plugin: Plugin,
-    options: Object.assign({}, defaults, options)
+    options: Hoek.applyToDefaults(defaults, options)
   })
 
   return server
@@ -245,13 +246,7 @@ describe('plugin', function () {
 
     await server.cube().bucket.create()
 
-    try {
-      await server.cube().get('missing.txt')
-
-      Code.fail()
-    } catch (e) {
-      expect(e.message).to.be.equal('NoSuchKey')
-    }
+    await expect(server.cube().get('missing.txt')).to.reject()
 
     await server.cube().bucket.delete()
   })

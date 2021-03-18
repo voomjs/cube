@@ -16,19 +16,19 @@
     "s3"
   ],
   "dependencies": {
-    "@aws-sdk/client-s3": "3.6.x",
-    "@aws-sdk/lib-storage": "3.6.x",
-    "joi": "17.x.x"
+    "@aws-sdk/client-s3": "^3.0.0",
+    "@aws-sdk/lib-storage": "^3.0.0",
+    "joi": "^17.0.0"
   },
   "devDependencies": {
-    "@hapi/code": "8.x.x",
-    "@hapi/hapi": "20.x.x",
-    "@hapi/hoek": "9.x.x",
-    "@hapi/lab": "24.x.x",
-    "dotenv": "8.x.x",
-    "form-data": "4.x.x",
-    "get-stream": "6.x.x",
-    "standard": "16.x.x"
+    "@hapi/code": "^8.0.0",
+    "@hapi/hapi": "^20.0.0",
+    "@hapi/hoek": "^9.0.0",
+    "@hapi/lab": "^24.0.0",
+    "dotenv": "^8.0.0",
+    "form-data": "^4.0.0",
+    "get-stream": "^6.0.0",
+    "standard": "^16.0.0"
   },
   "scripts": {
     "test": "lab",

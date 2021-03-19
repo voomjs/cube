@@ -1,6 +1,6 @@
 # @voom/cube
 
-#### [S3](https://aws.amazon.com/s3) wrapper for [Hapi](https://hapi.dev).
+#### [S3](https://aws.amazon.com/s3) client for [Hapi](https://hapi.dev).
 
 This plugin exposes a cube instance within your server.
 
